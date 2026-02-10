@@ -23,7 +23,7 @@ except ImportError:
 
 from ..models import Class, Function, Import, Variable
 from ..plugins.base import ElementExtractor, LanguagePlugin
-from ..utils import log_error
+from ..utils import log_error, log_debug
 
 
 class PHPElementExtractor(ElementExtractor):
