@@ -835,7 +835,10 @@ class PHPPlugin(LanguagePlugin):
 
     async def _load_file_safe(self, file_path: str) -> str:
         """
-        Load file content with encoding detection.
+        Load file content with robust encoding detection.
+
+        Uses project's unified EncodingManager for consistent encoding handling
+        across all language plugins.
 
         Args:
             file_path: Path to the file
@@ -846,19 +849,16 @@ class PHPPlugin(LanguagePlugin):
         Raises:
             IOError: If file cannot be read
         """
-        import chardet
+        from ..encoding_utils import EncodingManager
 
         try:
-            # Read file in binary mode
-            with open(file_path, "rb") as f:
-                raw_content = f.read()
+            # Use unified EncodingManager with UTF-8 first, BOM detection,
+            # and chardet fallback (only when confidence > 70%)
+            content, detected_encoding = EncodingManager.read_file_safe(file_path)
 
-            # Detect encoding
-            detected = chardet.detect(raw_content)
-            encoding = detected.get("encoding", "utf-8")
+            log_debug(f"Successfully loaded PHP file {file_path} with encoding: {detected_encoding}")
+            return content
 
-            # Decode with detected encoding
-            return raw_content.decode(encoding or "utf-8")
         except Exception as e:
-            log_error(f"Error loading file {file_path}: {e}")
+            log_error(f"Error loading PHP file {file_path}: {e}")
             raise OSError(f"Failed to load file {file_path}: {e}") from e
